@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-socketio
+python-dotenv
+pydantic
+pydantic-settings
+sqlalchemy
+sqlalchemy[asyncio]
+passlib
+bcrypt
+alembic
+argon2-cffi
+asyncpg
