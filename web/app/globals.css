@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.h-fit-layout {
+  @apply h-[calc(100vh-53px)];
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
