@@ -1,28 +1,39 @@
 "use client";
-import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
-import { useSidebarContext } from "@/context/SidebarContext";
+import NavigationDrawer from "./NavigationDrawer";
+import { ModeToggle } from "../theme/mode-toggle";
+import { usePathname } from "next/navigation";
+import { ReactNode, use } from "react";
 
-interface HeaderProps {
-  pageTitle: string;
-  RightSlot?: ReactNode;
-}
+const TITLE_MAP: { [key: string]: string } = {
+  "/dashboard": "Dashboard",
+};
 
-export function Header({ pageTitle, RightSlot }: HeaderProps) {
-  const { openSidebar } = useSidebarContext();
+const getPageTitle = (pathname: string): string => {
+  return TITLE_MAP[pathname] || "Page Title";
+};
+
+export function Header() {
+  const pathname = usePathname();
+  const pageTitle = getPageTitle(pathname);
 
   return (
-    <header className="border-b p-2 flex items-center justify-between">
+    <header className="border-b p-2 flex items-center justify-between sticky top-0 bg-background z-10">
       <div className="flex items-center space-x-4">
-        <Button variant="outline" size="icon" onClick={openSidebar}>
-          <Menu className="h-4 w-4" />
-        </Button>
+        <NavigationDrawer>
+          <Button variant="outline" size="icon">
+            <Menu className="h-4 w-4" />
+          </Button>
+        </NavigationDrawer>
 
         <div className="font-semibold text-sm">{pageTitle}</div>
       </div>
 
-      <nav className="space-x-4">{RightSlot}</nav>
+      <nav className="flex gap-2 items-center justify-between">
+        <ModeToggle />
+        <Button size={"sm"}>Click</Button>
+      </nav>
     </header>
   );
 }
