@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
 
-from sqlalchemy import String, Enum as SQLEnum, DateTime, func
+from sqlalchemy import String, Enum as SQLEnum, DateTime, func, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,6 +22,9 @@ class Department(Base):
     __tablename__ = "departments_table"
 
     department_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    google_sub_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
+    is_online: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     department_code: Mapped[str] = mapped_column(String(20), unique=True ,index=True, nullable=False)
     department_name: Mapped[str] = mapped_column(String(250), unique=True, index=True, nullable=False)

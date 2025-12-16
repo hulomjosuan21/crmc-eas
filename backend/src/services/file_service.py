@@ -1,5 +1,3 @@
-# src/services/file_service.py
-
 import os
 import shutil
 from pathlib import Path

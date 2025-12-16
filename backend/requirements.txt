@@ -11,3 +11,6 @@ bcrypt
 alembic
 argon2-cffi
 asyncpg
+redis
+rq
+booktype
