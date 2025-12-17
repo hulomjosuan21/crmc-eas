@@ -23,10 +23,8 @@ class Department(Base):
 
     department_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    google_sub_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
-    google_email: Mapped[str] = mapped_column(String(250), unique=True, index=True, nullable=False)
-    google_name: Mapped[str] = mapped_column(String(250), nullable=False)
-    google_image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    oauth_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
+    oauth_email: Mapped[str] = mapped_column(String(250), unique=True, index=True, nullable=False)
 
     is_online: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

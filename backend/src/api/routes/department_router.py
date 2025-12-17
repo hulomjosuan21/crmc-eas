@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 import uuid
 
-from fastapi import Request, Form, HTTPException, status, UploadFile, File
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import Request, Form, UploadFile, File
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.routes.base_router import BaseRouter
@@ -10,6 +10,8 @@ from src.core.oauth import oauth
 from src.services.department import DepartmentService
 from src.models.department import DepartmentRoleEnum
 from src.core.config import settings
+from src.core.exceptions import DomainException, BadRequestError
+from src.core.response import BaseResponse
 
 class DepartmentRouter(BaseRouter):
     prefix = "/department"
@@ -26,10 +28,8 @@ class DepartmentRouter(BaseRouter):
         ):
             db: AsyncSession = request.state.db
             if not department_code.isupper() or not department_code.isalnum():
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Department code must be uppercase letters and numbers only.",
-                )
+                raise DomainException(detail="Department code must be uppercase letters and numbers only.")
+
             new_department = await DepartmentService.create_initial_department_record(
                 db=db,
                 dept_code=department_code,
@@ -47,7 +47,7 @@ class DepartmentRouter(BaseRouter):
             }
             request.session["pending_department_id"] = str(new_department.department_id)
             request.session["last_oauth_attempt"] = datetime.now(timezone.utc).isoformat()
-            return JSONResponse({
+            return BaseResponse({
                 "message": "Department created. Proceed to Google authentication.",
                 "authorization_url": authorization_url
             })
@@ -63,7 +63,7 @@ class DepartmentRouter(BaseRouter):
             stored_state = stored_oauth.get("state")
             stored_redirect = stored_oauth.get("redirect_uri")
             if not url_state or url_state != stored_state:
-                raise HTTPException(status_code=400, detail="Session expired or state mismatch.")
+                raise BadRequestError(detail="Session expired or state mismatch.")
 
             try:
                 token = await oauth.google.fetch_access_token(
@@ -76,11 +76,13 @@ class DepartmentRouter(BaseRouter):
                     token=token
                 )
                 user_info = user_info_resp.json()
-            except Exception as e:
-                raise HTTPException(status_code=500, detail="Google authentication failed.")
+            except Exception:
+                raise DomainException(detail="Google authentication failed.")
+
             department_id_str = session.get("pending_department_id")
             if not department_id_str:
-                raise HTTPException(status_code=400, detail="Registration context lost.")
+                raise BadRequestError(detail="Registration context lost.")
+
             try:
                 department_id = uuid.UUID(department_id_str)
                 updated_department = await DepartmentService.update_department_with_google_credentials(
@@ -91,8 +93,7 @@ class DepartmentRouter(BaseRouter):
                 await db.commit()
             except Exception as e:
                 await db.rollback()
-                print(f"DB UPDATE ERROR: {repr(e)}")
-                raise HTTPException(status_code=500, detail="Failed to finalize registration.")
+                raise DomainException(detail="Failed to finalize registration.")
 
             default_web_destination = f"{settings.CLIENT_WEB_URL}/event"
             final_destination = session.pop("post_login_redirect", default_web_destination)
@@ -103,7 +104,7 @@ class DepartmentRouter(BaseRouter):
             from urllib.parse import urlencode
             params = urlencode({
                 "status": "success",
-                "email": updated_department.google_email,
+                "email": updated_department.oauth_email,
             })
             separator = "&" if "?" in final_destination else "?"
             redirect_url = f"{final_destination}{separator}{params}"

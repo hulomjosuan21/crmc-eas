@@ -13,7 +13,7 @@ argon2-cffi
 asyncpg
 redis
 rq
-authlib[starlette]
+authlib
 python-multipart
 starlette
 itsdangerous

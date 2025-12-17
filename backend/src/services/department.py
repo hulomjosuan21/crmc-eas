@@ -25,10 +25,8 @@ class DepartmentService:
             department_name=dept_name,
             role=role,
             department_image=department_image_url,
-            google_sub_id=None,
-            google_email="PENDING_AUTH@example.com",
-            google_name="PENDING_AUTH",
-            google_image=None,
+            oauth_id=None,
+            oauth_email="PENDING_AUTH@example.com",
         )
 
         db.add(new_department)
@@ -45,23 +43,21 @@ class DepartmentService:
     ) -> Department:
 
         stmt = select(Department).where(Department.department_id == department_id)
-        department = (await db.execute(stmt)).scalars().first()
+        department: Department = (await db.execute(stmt)).scalars().first()
 
         if not department:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department record not found.")
 
         conflict_stmt = select(Department).where(
-            Department.google_sub_id == user_info.get('sub'),
+            Department.oauth_id == user_info.get('sub'),
             Department.department_id != department_id
         )
         if (await db.execute(conflict_stmt)).scalars().first():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                                 detail="Google account already linked to another department.")
 
-        department.google_sub_id = user_info.get('sub')
-        department.google_email = user_info.get('email')
-        department.google_name = user_info.get('name')
-        department.google_image = user_info.get('picture')
+        department.oauth_id = user_info.get('sub')
+        department.oauth_email = user_info.get('email')
 
         await db.commit()
         await db.refresh(department)

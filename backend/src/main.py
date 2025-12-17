@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, Request, status, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
@@ -15,31 +16,33 @@ from src.core.socket import socketio_asgi
 async def exception_handler(request: Request, exc: Exception):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     error_code = "SERVER_ERROR"
-    message = "An unexpected error occurred on the server. Please check logs for details."
-
+    detail = "An unexpected error occurred on the server."
     if isinstance(exc, DomainException):
         status_code = exc.status_code
         error_code = exc.code
-        message = exc.message
-
+        detail = exc.detail
     elif isinstance(exc, (OperationalError, DBAPIError)):
         print(f"CRITICAL DB ERROR: {exc}")
         status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         error_code = "DB_UNAVAILABLE"
-        message = "The database service is currently unavailable. Please try again later."
+        detail = "The database service is currently unavailable."
+    elif isinstance(exc, RequestValidationError):
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+        error_code = "VALIDATION_ERROR"
+        detail = "; ".join([f"{e['loc'][-1]}: {e['msg']}" for e in exc.errors()])
+    elif isinstance(exc, HTTPException):
+        status_code = exc.status_code
+        error_code = "HTTP_ERROR"
+        detail = exc.detail
 
     else:
         print(f"UNHANDLED EXCEPTION: {type(exc).__name__}: {str(exc)}")
-        if isinstance(exc, HTTPException):
-            status_code = exc.status_code
-            message = exc.detail
-            error_code = "HTTP_ERROR"
 
     return JSONResponse(
         status_code=status_code,
         content={
             "code": error_code,
-            "message": message
+            "detail": detail
         },
     )
 
