@@ -24,6 +24,10 @@ class Department(Base):
     department_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     google_sub_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
+    google_email: Mapped[str] = mapped_column(String(250), unique=True, index=True, nullable=False)
+    google_name: Mapped[str] = mapped_column(String(250), nullable=False)
+    google_image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
     is_online: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     department_code: Mapped[str] = mapped_column(String(20), unique=True ,index=True, nullable=False)
@@ -47,9 +51,4 @@ class Department(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now()
-    )
-
-    students: Mapped[List["Student"]] = relationship(
-        back_populates="department",
-        lazy="raise"
     )

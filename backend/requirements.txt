@@ -13,4 +13,8 @@ argon2-cffi
 asyncpg
 redis
 rq
-booktype
+authlib[starlette]
+python-multipart
+starlette
+itsdangerous
+httpx

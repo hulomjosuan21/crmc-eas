@@ -29,11 +29,6 @@ class Student(Base):
         nullable=False
     )
 
-    department: Mapped["Department"] = relationship(
-        back_populates="students",
-        lazy="raise"
-    )
-
     student_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     student_updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

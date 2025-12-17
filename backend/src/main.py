@@ -3,9 +3,10 @@ from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from sqlalchemy.exc import OperationalError, DBAPIError
-
+from starlette.middleware.sessions import SessionMiddleware
 from src.api.router import api_router
 from src.core.config import settings
 from src.core.exceptions import DomainException
@@ -45,6 +46,25 @@ async def exception_handler(request: Request, exc: Exception):
 os.makedirs(settings.FILES_STORAGE_PATH, exist_ok=True)
 app = FastAPI(title=settings.PROJECT_NAME,docs_url=None,redoc_url=None,openapi_url=None)
 
+origins = [
+    "http://localhost:3000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,  # 🔑
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie="fapi_session",
+    same_site="lax",
+    https_only=False,
+    max_age=3600
+)
 app.add_exception_handler(DomainException, exception_handler)
 app.add_exception_handler(OperationalError, exception_handler)
 app.add_exception_handler(DBAPIError, exception_handler)

@@ -1,27 +1,42 @@
-import { Metadata } from "next";
+"use client";
+import { useState } from "react";
+import { createDepartment } from "@/app/actions/createDepartmentAction";
+import { Button } from "@/components/ui/button";
+import axiosClient from "@/lib/axiosClient";
 
-export const metadata: Metadata = {
-  title: "Dashboard | CRMC-EAS",
-  description: "Manage users, reports, and analytics",
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
+export default function Page() {
+  const [file, setFile] = useState<File | null>(null);
 
-async function fetchSlowData() {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  return {
-    message: "Data loaded successfully after 3 seconds!",
-    timestamp: new Date().toLocaleTimeString(),
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    }
   };
-}
 
-export default async function Page() {
-  const data = await fetchSlowData();
+  const handleSubmit = async () => {
+    if (!file) {
+      alert("Please select a file");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("departmentCode", "CCS");
+    formData.append("departmentName", "College of Computer Studies");
+    formData.append("role", "department");
+    formData.append("imageFile", file, file.name);
+    const response = await axiosClient.post<{
+      message: string;
+      authorization_url: string;
+    }>("/department/signup", formData);
+    const { authorization_url } = response.data;
+
+    window.location.href = authorization_url;
+  };
+
   return (
-    <main className="h-fit-layout grid place-content-center">
-      <section>{JSON.stringify(data, null, 2)}</section>
+    <main>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <Button onClick={handleSubmit}>Submit</Button>
     </main>
   );
 }
