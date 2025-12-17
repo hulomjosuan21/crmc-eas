@@ -34,7 +34,6 @@ async def exception_handler(request: Request, exc: Exception):
         status_code = exc.status_code
         error_code = "HTTP_ERROR"
         detail = exc.detail
-
     else:
         print(f"UNHANDLED EXCEPTION: {type(exc).__name__}: {str(exc)}")
 
@@ -50,20 +49,21 @@ os.makedirs(settings.FILES_STORAGE_PATH, exist_ok=True)
 app = FastAPI(title=settings.PROJECT_NAME,docs_url=None,redoc_url=None,openapi_url=None)
 
 origins = [
-    "http://localhost:3000"
+    settings.CLIENT_WEB_URL,
+    settings.CLIENT_MOBILE_SCHEMA
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,  # 🔑
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SECRET_KEY,
-    session_cookie="fapi_session",
+    session_cookie="auth_session",
     same_site="lax",
     https_only=False,
     max_age=3600

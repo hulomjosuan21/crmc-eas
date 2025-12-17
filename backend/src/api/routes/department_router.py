@@ -1,10 +1,7 @@
-from datetime import datetime, timezone
 import uuid
-
+from urllib.parse import urlencode
 from fastapi import Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.api.routes.base_router import BaseRouter
 from src.core.oauth import oauth
 from src.services.department import DepartmentService
@@ -12,6 +9,7 @@ from src.models.department import DepartmentRoleEnum
 from src.core.config import settings
 from src.core.exceptions import DomainException, BadRequestError
 from src.core.response import BaseResponse
+
 
 class DepartmentRouter(BaseRouter):
     prefix = "/department"
@@ -26,86 +24,100 @@ class DepartmentRouter(BaseRouter):
                 role: DepartmentRoleEnum = Form(DepartmentRoleEnum.DEPARTMENT, alias="role"),
                 image_file: UploadFile = File(..., alias="imageFile"),
         ):
-            db: AsyncSession = request.state.db
-            if not department_code.isupper() or not department_code.isalnum():
-                raise DomainException(detail="Department code must be uppercase letters and numbers only.")
+            db = request.state.db
+            service = DepartmentService(db)
 
-            new_department = await DepartmentService.create_initial_department_record(
-                db=db,
-                dept_code=department_code,
-                dept_name=department_name,
-                role=role,
-                image_file=image_file
-            )
-            redirect_uri = str(request.url_for("google_department_callback"))
-            result = await oauth.google.create_authorization_url(redirect_uri)
-            authorization_url = result["url"]
-            state = result["state"]
-            request.session["oauth:google"] = {
-                "state": state,
-                "redirect_uri": redirect_uri,
-            }
-            request.session["pending_department_id"] = str(new_department.department_id)
-            request.session["last_oauth_attempt"] = datetime.now(timezone.utc).isoformat()
-            return BaseResponse({
-                "message": "Department created. Proceed to Google authentication.",
-                "authorization_url": authorization_url
-            })
+            try:
+                new_dept = await service.register_initial_department(
+                    code=department_code,
+                    name=department_name,
+                    role=role,
+                    image_file=image_file
+                )
+
+                redirect_uri = str(request.url_for("google_department_callback"))
+                auth_result = await oauth.google.create_authorization_url(redirect_uri)
+
+                request.session["oauth:google"] = {
+                    "state": auth_result["state"],
+                    "redirect_uri": redirect_uri,
+                }
+                request.session["pending_department_id"] = str(new_dept.department_id)
+
+                await db.commit()
+
+                return BaseResponse({
+                    "message": "Department created. Proceed to Google authentication.",
+                    "authorization_url": auth_result["url"]
+                })
+            except Exception as e:
+                await db.rollback()
+                raise e
 
         @self.router.get("/oauth/callback", name="google_department_callback")
         async def google_auth_callback(request: Request):
-            db: AsyncSession = request.state.db
+            db = request.state.db
             session = request.session
-            url_state = request.query_params.get("state")
-            code = request.query_params.get("code")
+            service = DepartmentService(db)
 
-            stored_oauth = session.get("oauth:google", {})
-            stored_state = stored_oauth.get("state")
-            stored_redirect = stored_oauth.get("redirect_uri")
-            if not url_state or url_state != stored_state:
-                raise BadRequestError(detail="Session expired or state mismatch.")
-
-            try:
-                token = await oauth.google.fetch_access_token(
-                    redirect_uri=stored_redirect,
-                    code=code,
-                    grant_type="authorization_code"
-                )
-                user_info_resp = await oauth.google.get(
-                    'https://www.googleapis.com/oauth2/v3/userinfo',
-                    token=token
-                )
-                user_info = user_info_resp.json()
-            except Exception:
-                raise DomainException(detail="Google authentication failed.")
-
-            department_id_str = session.get("pending_department_id")
-            if not department_id_str:
+            dept_id_str = session.get("pending_department_id")
+            if not dept_id_str:
                 raise BadRequestError(detail="Registration context lost.")
 
+            department_id = uuid.UUID(dept_id_str)
+
             try:
-                department_id = uuid.UUID(department_id_str)
-                updated_department = await DepartmentService.update_department_with_google_credentials(
-                    db=db,
-                    department_id=department_id,
-                    user_info=user_info,
+                stored_oauth = session.get("oauth:google", {})
+                if request.query_params.get("state") != stored_oauth.get("state"):
+                    raise BadRequestError(detail="Session expired or state mismatch.")
+
+                token = await oauth.google.fetch_access_token(
+                    redirect_uri=stored_oauth.get("redirect_uri"),
+                    code=request.query_params.get("code"),
+                    grant_type="authorization_code"
                 )
+                user_info = await oauth.google.userinfo(token=token)
+
+                updated_dept = await service.bind_google_credentials(
+                    department_id=department_id,
+                    user_info=user_info
+                )
+
+                destination = session.pop("post_login_redirect", f"{settings.CLIENT_WEB_URL}/event")
+                params = urlencode({"status": "success", "email": updated_dept.oauth_email})
+                separator = "&" if "?" in destination else "?"
+                return RedirectResponse(url=f"{destination}{separator}{params}", status_code=303)
+            except Exception:
+                await service.delete_pending_department(department_id)
+                error_msg = "Authentication failed"
+                destination = session.pop("post_login_redirect", f"{settings.CLIENT_WEB_URL}/auth/error")
+                params = urlencode({"status": "error", "detail": error_msg})
+                separator = "&" if "?" in destination else "?"
+                return RedirectResponse(url=f"{destination}{separator}{params}", status_code=303)
+            finally:
+                session.pop("oauth:google", None)
+                session.pop("pending_department_id", None)
+
+
+        @self.router.delete("/{department_id}", name="delete_department")
+        async def delete_department(
+                request: Request,
+                department_id: uuid.UUID
+        ):
+
+            db = request.state.db
+            service = DepartmentService(db)
+
+            try:
+                # We delegate the logic to the service
+                await service.delete_department(department_id)
+
+                # Commit the transaction to finalize the DB delete and trigger the file deletion event
                 await db.commit()
+
+                return BaseResponse({
+                    "message": "Department deleted successfully."
+                })
             except Exception as e:
                 await db.rollback()
-                raise DomainException(detail="Failed to finalize registration.")
-
-            default_web_destination = f"{settings.CLIENT_WEB_URL}/event"
-            final_destination = session.pop("post_login_redirect", default_web_destination)
-
-            session.pop("oauth:google", None)
-            session.pop("pending_department_id", None)
-            session.pop("last_oauth_attempt", None)
-            from urllib.parse import urlencode
-            params = urlencode({
-                "status": "success",
-                "email": updated_department.oauth_email,
-            })
-            separator = "&" if "?" in final_destination else "?"
-            redirect_url = f"{final_destination}{separator}{params}"
-            return RedirectResponse(url=redirect_url, status_code=303)
+                raise e

@@ -1,15 +1,14 @@
 from __future__ import annotations
 import enum
 import uuid
-
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, List
-
-from sqlalchemy import String, Enum as SQLEnum, DateTime, func, Boolean
+from sqlalchemy import String, Enum as SQLEnum, DateTime, func, Boolean, event
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
+from src.listeners.department_listener import delete_department_image
 
 if TYPE_CHECKING:
     from src.models.student import Student
@@ -50,3 +49,5 @@ class Department(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+
+event.listen(Department, 'after_delete', delete_department_image)

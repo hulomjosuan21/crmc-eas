@@ -1,6 +1,8 @@
-from typing import Sequence, Optional
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.models.department import Department
 
 
@@ -8,18 +10,19 @@ class DepartmentRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_all(self) -> Sequence[Department]:
-        result = await self.db.execute(select(Department))
-        return result.scalars().all()
+    async def create(self, department: Department) -> Department:
+        self.db.add(department)
+        return department
 
-    async def get_by_google_sub_id(self, google_sub_id: str) -> Optional[Department]:
-        result = await self.db.execute(
-            select(Department).filter(Department.oauth_id == google_sub_id)
-        )
+    async def get_by_id(self, department_id: UUID) -> Department | None:
+        query = select(Department).where(Department.department_id == department_id)
+        result = await self.db.execute(query)
         return result.scalars().first()
 
-    async def update_online_status(self, department: Department, is_online: bool) -> Department:
-        department.is_online = is_online
-        await self.db.commit()
-        await self.db.refresh(department)
-        return department
+    async def get_by_oauth_id(self, oauth_id: str) -> Department | None:
+        query = select(Department).where(Department.oauth_id == oauth_id)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def delete(self, department: Department) -> None:
+        await self.db.delete(department)
