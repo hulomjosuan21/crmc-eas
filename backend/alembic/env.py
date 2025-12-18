@@ -12,8 +12,9 @@ from alembic import context
 # ---------------------------------------------------------
 from src.core.config import settings            # Import Settings
 from src.core.database import Base              # Import Base
-from src.models.department import Department
-from src.models.student import Student
+from src.models.department_model import Department
+from src.models.student_model import Student
+from src.models.officer_model import Officer
 # (Import other models here as you create them)
 # ---------------------------------------------------------
 

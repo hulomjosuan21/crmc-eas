@@ -4,8 +4,8 @@ from fastapi import Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse
 from src.api.routes.base_router import BaseRouter
 from src.core.oauth import oauth
-from src.services.department import DepartmentService
-from src.models.department import DepartmentRoleEnum
+from src.services.department_service import DepartmentService
+from src.models.department_model import DepartmentRoleEnum
 from src.core.config import settings
 from src.core.exceptions import DomainException, BadRequestError
 from src.core.response import BaseResponse
@@ -35,7 +35,7 @@ class DepartmentRouter(BaseRouter):
                     image_file=image_file
                 )
 
-                redirect_uri = str(request.url_for("google_department_callback"))
+                redirect_uri = str(request.url_for("google_auth_department_callback"))
                 auth_result = await oauth.google.create_authorization_url(redirect_uri)
 
                 request.session["oauth:google"] = {
@@ -54,8 +54,8 @@ class DepartmentRouter(BaseRouter):
                 await db.rollback()
                 raise e
 
-        @self.router.get("/oauth/callback", name="google_department_callback")
-        async def google_auth_callback(request: Request):
+        @self.router.get("/oauth/callback", name="google_auth_department_callback")
+        async def google_auth_department_callback(request: Request):
             db = request.state.db
             session = request.session
             service = DepartmentService(db)

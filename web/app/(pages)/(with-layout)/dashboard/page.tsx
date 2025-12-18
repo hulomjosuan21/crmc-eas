@@ -33,10 +33,26 @@ export default function Page() {
     window.location.href = authorization_url;
   };
 
+  const handleSubmitOfficer = async () => {
+    const response = await axiosClient.post<{
+      message: string;
+      authorization_url: string;
+    }>("/officer/signup", {
+      departmentId: "f39283b0-2ad8-48d1-87cd-1419c189d414",
+      fullName: "Josuan Leonardo Hulom",
+      roleLabel: "Test",
+      assignedPermissions: ["Test", "Test"],
+    });
+    const { authorization_url } = response.data;
+
+    window.location.href = authorization_url;
+  };
+
   return (
     <main>
       <input type="file" accept="image/*" onChange={handleFileChange} />
       <Button onClick={handleSubmit}>Submit</Button>
+      <Button onClick={handleSubmitOfficer}>officer</Button>
     </main>
   );
 }

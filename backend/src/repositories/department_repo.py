@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.department import Department
+from src.models.department_model import Department
 
 
 class DepartmentRepository:

@@ -11,7 +11,7 @@ from src.core.database import Base
 from src.listeners.department_listener import delete_department_image
 
 if TYPE_CHECKING:
-    from src.models.student import Student
+    from src.models.student_model import Student
 
 class DepartmentRoleEnum(str, enum.Enum):
     SCHOOL = "school"
@@ -24,8 +24,6 @@ class Department(Base):
 
     oauth_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
     oauth_email: Mapped[str] = mapped_column(String(250), unique=True, index=True, nullable=False)
-
-    is_online: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     department_code: Mapped[str] = mapped_column(String(20), unique=True ,index=True, nullable=False)
     department_name: Mapped[str] = mapped_column(String(250), unique=True, index=True, nullable=False)

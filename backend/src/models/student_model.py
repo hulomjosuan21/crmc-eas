@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
 if TYPE_CHECKING:
-    from src.models.department import Department
+    from src.models.department_model import Department
 
 class Student(Base):
     __tablename__ = "students_table"

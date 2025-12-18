@@ -2,10 +2,10 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import NotFoundError, ConflictError, DomainException
-from src.models.department import Department, DepartmentRoleEnum
+from src.models.department_model import Department, DepartmentRoleEnum
 from fastapi import UploadFile
 
-from src.repositories.department import DepartmentRepository
+from src.repositories.department_repo import DepartmentRepository
 from src.services.file_service import FileService
 
 
@@ -37,8 +37,7 @@ class DepartmentService:
 
         await self.repo.create(new_department)
 
-        await self.db.commit()
-        await self.db.refresh(new_department)
+        await self.db.flush()
 
         return new_department
 
