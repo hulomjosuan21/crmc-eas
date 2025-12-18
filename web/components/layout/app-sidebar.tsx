@@ -17,6 +17,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
+import { ModeToggle } from "../theme/mode-toggle";
 
 const data = {
   user: {
@@ -81,6 +82,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <ModeToggle />
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>

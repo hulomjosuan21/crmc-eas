@@ -1,9 +1,10 @@
-import Calendar from "@/components/Calendar";
+"use client";
+import { RichTextEditorDemo } from "@/components/Editor";
 
 export default function Page() {
   return (
-    <div>
-      <Calendar />
+    <div className="p-8">
+      <RichTextEditorDemo />
     </div>
   );
 }
