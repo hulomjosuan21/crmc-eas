@@ -27,7 +27,7 @@ export default function Page() {
     const response = await axiosClient.post<{
       message: string;
       authorization_url: string;
-    }>("/department/signup", formData);
+    }>("/auth/department/signup", formData);
     const { authorization_url } = response.data;
 
     window.location.href = authorization_url;
@@ -37,8 +37,8 @@ export default function Page() {
     const response = await axiosClient.post<{
       message: string;
       authorization_url: string;
-    }>("/officer/signup", {
-      departmentId: "f39283b0-2ad8-48d1-87cd-1419c189d414",
+    }>("/auth/officer/signup", {
+      departmentId: "3f078ea8-c1e1-481a-9399-26cdc5656aa8",
       fullName: "Josuan Leonardo Hulom",
       roleLabel: "Test",
       assignedPermissions: ["Test", "Test"],
