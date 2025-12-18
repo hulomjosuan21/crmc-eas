@@ -41,25 +41,25 @@ class DepartmentService:
 
         return new_department
 
-    async def bind_google_credentials(self, department_id: uuid.UUID, user_info: dict) -> Department:
+    async def bind_google_credentials(self, department_id: uuid.UUID, oauth_user: dict) -> Department:
         department = await self.repo.get_by_id(department_id)
         if not department:
             raise NotFoundError(detail="Department record not found.")
 
-        oauth_id = user_info.get('sub')
+        oauth_id = oauth_user.get('sub')
         existing_dept = await self.repo.get_by_oauth_id(oauth_id)
 
         if existing_dept and existing_dept.department_id != department_id:
             raise ConflictError(detail="Google account already linked to another department.")
 
         department.oauth_id = oauth_id
-        department.oauth_email = user_info.get('email')
+        department.oauth_email = oauth_user.get('email')
 
         await self.db.commit()
         await self.db.refresh(department)
         return department
 
-    async def delete_pending_department(self, department_id: uuid.UUID):
+    async def delete_pending(self, department_id: uuid.UUID):
         department = await self.repo.get_by_id(department_id)
         if department and department.oauth_email == "PENDING_AUTH":
             await self.repo.delete(department)
