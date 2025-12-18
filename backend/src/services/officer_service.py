@@ -4,14 +4,14 @@ import uuid
 from src.core.exceptions import NotFoundError, ConflictError, DomainException
 from src.models.officer_model import Officer
 from src.repositories.officer_repo import OfficerRepository
-from src.schemas.officer_schema import CreateOfficer
+from src.schemas.officer_schema import CreateOfficerSchema
 
 class OfficerService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = OfficerRepository(db)
 
-    async def register_initial_officer(self, officer: CreateOfficer) -> Officer:
+    async def register_initial_officer(self, officer: CreateOfficerSchema) -> Officer:
         new_officer = Officer(
             full_name=officer.full_name,
             department_id=officer.department_id,

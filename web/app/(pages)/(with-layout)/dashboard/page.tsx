@@ -3,6 +3,9 @@ import { useState } from "react";
 import { createDepartment } from "@/app/actions/createDepartmentAction";
 import { Button } from "@/components/ui/button";
 import axiosClient from "@/lib/axiosClient";
+import { ApiResponse } from "@/lib/response";
+import { getError } from "@/lib/error";
+import { toast } from "sonner";
 
 export default function Page() {
   const [file, setFile] = useState<File | null>(null);
@@ -48,11 +51,26 @@ export default function Page() {
     window.location.href = authorization_url;
   };
 
+  const handleCreateNewProgram = async () => {
+    try {
+      const response = await axiosClient.post<ApiResponse>("/program/new", {
+        programCode: "BSIT",
+        programName: "Bachelor of Science in Information Technology",
+        departmentId: "3f078ea8-c1e1-481a-9399-26cdc5656aa8",
+      });
+      toast.success(response.data.detail);
+    } catch (err) {
+      const { title, description } = getError(err);
+      toast.error(title, { description });
+    }
+  };
+
   return (
     <main>
       <input type="file" accept="image/*" onChange={handleFileChange} />
       <Button onClick={handleSubmit}>Submit</Button>
       <Button onClick={handleSubmitOfficer}>officer</Button>
+      <Button onClick={handleCreateNewProgram}>new program</Button>
     </main>
   );
 }

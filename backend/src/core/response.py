@@ -9,18 +9,18 @@ class BaseResponse(ORJSONResponse):
             content: Any = None,
             payload: Optional[Any] = None,
             success: bool = True,
-            code: str = "SUCCESS",
+            code: str = "Success",
             detail: str = "Operation successful",
             status_code: int = status.HTTP_200_OK,
     ):
         if content is not None:
             final_response = content
         else:
-            final_response = {
+            final_response = {k: v for k, v in {
                 "success": success,
                 "code": code,
                 "detail": detail,
                 "payload": payload
-            }
+            }.items() if v}
 
         super().__init__(content=final_response, status_code=status_code)

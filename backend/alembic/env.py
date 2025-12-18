@@ -15,6 +15,7 @@ from src.core.database import Base              # Import Base
 from src.models.department_model import Department
 from src.models.student_model import Student
 from src.models.officer_model import Officer
+from src.models.program_model import Program
 # (Import other models here as you create them)
 # ---------------------------------------------------------
 

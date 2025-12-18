@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from uuid import UUID
 
-class CreateOfficer(BaseModel):
+class CreateOfficerSchema(BaseModel):
     department_id: UUID = Field(..., alias="departmentId")
 
     full_name: str = Field(..., alias="fullName", max_length=250)

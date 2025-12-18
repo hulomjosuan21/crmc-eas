@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from datetime import datetime
 
@@ -15,15 +15,27 @@ if TYPE_CHECKING:
 
 class Student(Base):
     __tablename__ = "students_table"
+    student_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_school_id: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
 
-    student_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    student_image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
-    full_name: Mapped[str] = mapped_column(String(250), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(150), nullable=False)
 
     department_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey(
             "departments_table.department_id",
+            ondelete="CASCADE"
+        ),
+        nullable=False
+    )
+
+    program_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "programs_table.program_id",
             ondelete="CASCADE"
         ),
         nullable=False

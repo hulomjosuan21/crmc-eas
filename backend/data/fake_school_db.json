@@ -1,0 +1,14 @@
+[
+    {
+      "student_school_id": "stu-0001",
+      "first_name": "Josuan",
+      "last_name": "Hulom",
+      "program_name": "BS Computer Science"
+    },
+    {
+      "student_school_id": "stu-0002",
+      "first_name": "Maria",
+      "last_name": "Clara",
+      "program_name": "BS Civil Engineering"
+    }
+]

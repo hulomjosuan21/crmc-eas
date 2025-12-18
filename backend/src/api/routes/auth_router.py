@@ -6,7 +6,7 @@ import uuid
 from src.api.routes.base_router import BaseRouter
 from src.services.department_service import DepartmentService
 from src.services.officer_service import OfficerService
-from src.schemas.officer_schema import CreateOfficer
+from src.schemas.officer_schema import CreateOfficerSchema
 from src.models.department_model import DepartmentRoleEnum
 from src.core.oauth import oauth
 from src.core.config import settings
@@ -93,7 +93,7 @@ class AuthRouter(BaseRouter):
             return await self._handle_google_callback(request, service, "department", "event")
 
         @self.router.post("/officer/signup", name="signup_officer")
-        async def signup_officer(payload: CreateOfficer, request: Request):
+        async def signup_officer(payload: CreateOfficerSchema, request: Request):
             db = request.state.db
             service = OfficerService(db)
             try:
