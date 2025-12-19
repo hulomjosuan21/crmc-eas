@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react";
+import { Calendar, Command, LayoutDashboard, Send } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import { ModeToggle } from "../theme/mode-toggle";
+import { useState } from "react";
 
 const data = {
   user: {
@@ -26,14 +26,14 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
-    { title: "Dashboard", icon: Inbox },
-    { title: "Events", icon: File },
-    { title: "Calendar", icon: Send },
+    { title: "Dashboard", icon: LayoutDashboard },
+    { title: "Calendar", icon: Calendar },
+    { title: "Event", icon: Send },
   ],
 };
 
 export function AppSidebar() {
-  const [activeItem, setActiveItem] = React.useState("Inbox");
+  const [activeItem, setActiveItem] = useState("Dashboard");
   const { toggleSidebar } = useSidebar();
   return (
     <Sidebar collapsible="icon" className="relative">
