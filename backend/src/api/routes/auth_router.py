@@ -66,6 +66,90 @@ class AuthRouter(BaseRouter):
             session.pop(f"pending_{entity_type}_id", None)
 
     def _register_routes(self):
+        @self.router.get("/signin/google", name="signin_google")
+        async def signin_google(request: Request):
+            redirect_uri = str(request.url_for("google_auth_signin_callback"))
+            auth_result = await oauth.google.create_authorization_url(redirect_uri)
+            request.session["oauth:google"] = {"state": auth_result["state"], "redirect_uri": redirect_uri}
+            return RedirectResponse(auth_result["url"])
+
+        @self.router.get("/signin/callback", name="google_auth_signin_callback")
+        async def google_auth_signin_callback(request: Request):
+            session = request.session
+            stored_oauth = session.get("oauth:google")
+
+            if not stored_oauth or request.query_params.get("state") != stored_oauth.get("state"):
+                raise BadRequestError(detail="State mismatch or session expired.")
+
+            try:
+                token = await oauth.google.fetch_access_token(
+                    redirect_uri=stored_oauth.get("redirect_uri"),
+                    code=request.query_params.get("code")
+                )
+                user_info = await oauth.google.userinfo(token=token)
+                email = user_info["email"]
+
+                db = request.state.db
+
+                dept_service = DepartmentService(db)
+                officer_service = OfficerService(db)
+
+                auth_type = None
+                auth_record = None
+                permissions = []
+
+                dept = await dept_service.get_by_email(email)
+                if dept:
+                    auth_type = "department"
+                    auth_record = dept
+                    permissions = ["access_all"]
+
+                if not auth_record:
+                    officer = await officer_service.get_by_email(email)
+                    if officer:
+                        auth_type = "officer"
+                        auth_record = officer
+                        permissions = officer.assigned_permissions
+
+                if not auth_record:
+                    return RedirectResponse(
+                        f"{settings.CLIENT_WEB_URL}/auth/error?detail=Unregistered_Email",
+                        status_code=303
+                    )
+
+                session["auth_department_id"] = str(auth_record.department_id)
+                session["auth_email"] = str(auth_record.oauth_email)
+                session["auth_type"] = auth_type
+                session["auth_role"] = getattr(auth_record, "role", "officer")
+                session["auth_permissions"] = permissions
+
+                session.pop("oauth:google", None)
+
+                return RedirectResponse(f"{settings.CLIENT_WEB_URL}/dashboard", status_code=303)
+
+            except Exception as e:
+                return RedirectResponse(f"{settings.CLIENT_WEB_URL}/auth/error", status_code=303)
+
+        @self.router.get("/me")
+        async def get_current_user(request: Request):
+            department_id = request.session.get("auth_department_id")
+            if not department_id:
+                return BaseResponse({"authenticated": False}, status_code=401)
+
+            return BaseResponse({
+                "auth_department_id": str(department_id),
+                "auth_email": str(request.session.get("auth_email")),
+                "auth_type": str(request.session.get("auth_type")),
+                "auth_role": str(request.session.get("auth_role")),
+                "auth_permissions": list(request.session.get("auth_permissions"))
+            })
+
+        @self.router.post("/sign-out")
+        async def logout(request: Request):
+            session = request.session
+            session.clear()
+            return BaseResponse(detail="Logged out successfully")
+
         @self.router.post("/department/signup", name="signup_department")
         async def signup_department(
             request: Request,

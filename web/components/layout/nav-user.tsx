@@ -1,4 +1,4 @@
-import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
+import { BadgeCheck, ChevronsUpDown, Loader2, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,9 +14,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
+import { useLogout } from "@/hooks/use-logout";
 
 export function NavUser({
   user,
@@ -28,6 +28,7 @@ export function NavUser({
   };
 }) {
   const router = useRouter();
+  const { mutate: logout, isPending } = useLogout();
 
   return (
     <SidebarMenu>
@@ -76,9 +77,25 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.replace("/auth/signin")}>
-              <LogOut />
-              Log out
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.preventDefault();
+                logout();
+              }}
+              disabled={isPending}
+              className="cursor-pointer"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <LogOut />
+                  Log out
+                </>
+              )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

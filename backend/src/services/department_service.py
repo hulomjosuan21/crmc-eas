@@ -1,4 +1,6 @@
 import uuid
+
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import NotFoundError, ConflictError, DomainException
@@ -13,6 +15,9 @@ class DepartmentService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = DepartmentRepository(db)
+
+    async def get_by_email(self, email: EmailStr) -> Department | None:
+        return await self.repo.get_by_email(email=email)
 
     async def register_initial_department(
             self,

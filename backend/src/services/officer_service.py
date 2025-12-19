@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -10,6 +11,9 @@ class OfficerService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = OfficerRepository(db)
+
+    async def get_by_email(self, email: EmailStr) -> Officer | None:
+        return await self.repo.get_by_email(email=email)
 
     async def register_initial_officer(self, officer: CreateOfficerSchema) -> Officer:
         new_officer = Officer(
