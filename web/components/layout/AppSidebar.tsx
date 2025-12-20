@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Command, LayoutDashboard, Send } from "lucide-react";
+import { Calendar, Command, LayoutDashboard, UsersRound } from "lucide-react";
 
 import {
   Sidebar,
@@ -15,25 +15,24 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { NavUser } from "./nav-user";
+import { NavDepartment } from "./navDepartment";
 import { ModeToggle } from "../theme/mode-toggle";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { NavUserSkeleton } from "./navDepartmentSkeleton";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+const navItem = {
   navMain: [
-    { title: "Dashboard", icon: LayoutDashboard },
-    { title: "Calendar", icon: Calendar },
-    { title: "Event", icon: Send },
+    { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { title: "Event Calendar", icon: Calendar, href: "/event-calendar" },
+    { title: "Manage Officer", icon: UsersRound, href: "/manage-officer" },
   ],
 };
 
 export function AppSidebar() {
-  const [activeItem, setActiveItem] = useState("Dashboard");
+  const { authDepartment, isLoading, isError } = useAuth();
+  const pathname = usePathname();
   const { toggleSidebar } = useSidebar();
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -64,15 +63,17 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.navMain.map((item) => (
+              {navItem.navMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
+                    asChild
                     tooltip={item.title}
-                    isActive={activeItem === item.title}
-                    onClick={() => setActiveItem(item.title)}
+                    isActive={pathname === item.href}
                   >
-                    <item.icon className="size-4" />
-                    <span>{item.title}</span>
+                    <Link href={item.href}>
+                      <item.icon className="size-4" />
+                      <span>{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -83,7 +84,11 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <ModeToggle />
-        <NavUser user={data.user} />
+        {isLoading && authDepartment && <NavUserSkeleton />}
+
+        {!isLoading && !isError && authDepartment && (
+          <NavDepartment authDept={authDepartment} />
+        )}
       </SidebarFooter>
     </Sidebar>
   );

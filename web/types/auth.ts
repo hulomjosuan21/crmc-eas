@@ -1,6 +1,9 @@
 export interface AuthDepartment {
-  auth_department_id: string;
-  user_type: "department" | "officer";
-  auth_role: "school" | "department" | "officer";
-  auth_permissions: string[];
+  authDepartmentId: string;
+  authName: string;
+  authEmail: string;
+  authType: "department" | "officer";
+  authRole: "school" | "department" | "officer";
+  authPermissions: string[];
+  authImage: string | null;
 }

@@ -538,7 +538,7 @@ export default function Calendar() {
   };
 
   return (
-    <div className="flex flex-col bg-background text-foreground p-6 gap-4 h-screen">
+    <div className="flex flex-col text-foreground p-6 gap-4 h-screen">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-sm font-semibold bg-card px-4 py-2 rounded-lg border min-w-[200px] text-center">

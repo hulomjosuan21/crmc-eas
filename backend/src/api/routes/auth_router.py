@@ -1,4 +1,4 @@
-from fastapi import Request, Form, UploadFile, File
+from fastapi import Request, Form, UploadFile, File, status
 from fastapi.responses import RedirectResponse
 from urllib.parse import urlencode
 import uuid
@@ -24,10 +24,10 @@ class AuthRouter(BaseRouter):
         auth_result = await oauth.google.create_authorization_url(redirect_uri)
         request.session["oauth:google"] = {"state": auth_result["state"], "redirect_uri": redirect_uri}
         request.session[f"pending_{entity_type}_id"] = str(entity_id)
-        return BaseResponse({
-            "message": f"{entity_type.capitalize()} created. Proceed to Google authentication.",
-            "authorization_url": auth_result["url"]
-        })
+        return BaseResponse(
+            detail=f"{entity_type.capitalize()} created. Proceed to Google authentication.",
+            payload=auth_result["url"]
+        )
 
     @staticmethod
     async def _handle_google_callback(request: Request, service, entity_type: str, default_redirect: str) -> RedirectResponse:
@@ -49,10 +49,12 @@ class AuthRouter(BaseRouter):
             )
             oauth_user = await oauth.google.userinfo(token=token)
 
-            updated_entity = await service.bind_google_credentials(entity_id, oauth_user)
-
-            destination = session.pop("post_login_redirect", f"{settings.CLIENT_WEB_URL}/{default_redirect}")
-            params = urlencode({"status": "success", "email": updated_entity.oauth_email})
+            await service.bind_google_credentials(entity_id, oauth_user)
+            destination = session.pop("post_login_redirect", f"{settings.CLIENT_WEB_URL}{default_redirect}")
+            params = urlencode({
+                "status": "success",
+                "detail": "You have successfully authenticated."
+            })
             separator = "&" if "?" in destination else "?"
             return RedirectResponse(url=f"{destination}{separator}{params}", status_code=303)
         except Exception:
@@ -68,10 +70,16 @@ class AuthRouter(BaseRouter):
     def _register_routes(self):
         @self.router.get("/signin/google", name="signin_google")
         async def signin_google(request: Request):
-            redirect_uri = str(request.url_for("google_auth_signin_callback"))
-            auth_result = await oauth.google.create_authorization_url(redirect_uri)
-            request.session["oauth:google"] = {"state": auth_result["state"], "redirect_uri": redirect_uri}
-            return RedirectResponse(auth_result["url"])
+            try:
+                redirect_uri = str(request.url_for("google_auth_signin_callback"))
+                auth_result = await oauth.google.create_authorization_url(redirect_uri)
+                request.session["oauth:google"] = {"state": auth_result["state"], "redirect_uri": redirect_uri}
+                return RedirectResponse(auth_result["url"])
+            except Exception:
+                return RedirectResponse(
+                    f"{settings.CLIENT_WEB_URL}/auth/signin?detail=Could not initialize Google Login",
+                    status_code=status.HTTP_303_SEE_OTHER
+                )
 
         @self.router.get("/signin/callback", name="google_auth_signin_callback")
         async def google_auth_signin_callback(request: Request):
@@ -100,9 +108,12 @@ class AuthRouter(BaseRouter):
 
                 dept = await dept_service.get_by_email(email)
                 if dept:
-                    auth_type = "department"
+                    auth_type = dept.role
                     auth_record = dept
-                    permissions = ["access_all"]
+                    if auth_type == DepartmentRoleEnum.DEPARTMENT:
+                        permissions = settings.get_permission_values(exclude=["manage-department"])
+                    else:
+                        permissions = settings.get_permission_values()
 
                 if not auth_record:
                     officer = await officer_service.get_by_email(email)
@@ -116,6 +127,12 @@ class AuthRouter(BaseRouter):
                         f"{settings.CLIENT_WEB_URL}/auth/error?detail=Unregistered_Email",
                         status_code=303
                     )
+                if auth_type == "officer":
+                    session["auth_image"] = str(auth_record.oauth_image)
+                    session["auth_name"] = str(auth_record.full_name)
+                else:
+                    session["auth_image"] = str(auth_record.department_image)
+                    session["auth_name"] = str(auth_record.department_name)
 
                 session["auth_department_id"] = str(auth_record.department_id)
                 session["auth_email"] = str(auth_record.oauth_email)
@@ -137,11 +154,13 @@ class AuthRouter(BaseRouter):
                 return BaseResponse({"authenticated": False}, status_code=401)
 
             return BaseResponse({
-                "auth_department_id": str(department_id),
-                "auth_email": str(request.session.get("auth_email")),
-                "auth_type": str(request.session.get("auth_type")),
-                "auth_role": str(request.session.get("auth_role")),
-                "auth_permissions": list(request.session.get("auth_permissions"))
+                "authDepartmentId": str(department_id),
+                "authName": str(request.session.get("auth_name")),
+                "authEmail": str(request.session.get("auth_email")),
+                "authType": str(request.session.get("auth_type")),
+                "authRole": str(request.session.get("auth_role")),
+                "authPermissions": list(request.session.get("auth_permissions")),
+                "authImage": str(request.session.get("auth_image"))
             })
 
         @self.router.post("/sign-out")
@@ -174,7 +193,7 @@ class AuthRouter(BaseRouter):
         @self.router.get("/department/oauth/callback", name="google_auth_department_callback")
         async def google_auth_department_callback(request: Request):
             service = DepartmentService(request.state.db)
-            return await self._handle_google_callback(request, service, "department", "event")
+            return await self._handle_google_callback(request, service, "department", "/auth/success")
 
         @self.router.post("/officer/signup", name="signup_officer")
         async def signup_officer(payload: CreateOfficerSchema, request: Request):

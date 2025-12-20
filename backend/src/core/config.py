@@ -1,11 +1,27 @@
 import os
+from typing import List
+import json
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "../data")
+PERMISSIONS_FILE = os.path.join(DATA_DIR, "route-permissions.json")
 ENV_PATH = os.path.join(BASE_DIR, "../.env.local")
 
 # Debug: Uncomment this to see exactly where it is looking if it still fails
 # print(f"Loading .env from: {ENV_PATH}")
+
+def load_permission_values() -> List[str]:
+    try:
+        if os.path.exists(PERMISSIONS_FILE):
+            with open(PERMISSIONS_FILE, "r") as f:
+                data = json.load(f)
+                return [item["value"] for item in data if "value" in item]
+        print(f"Warning: Permissions file not found at {PERMISSIONS_FILE}")
+        return []
+    except Exception as e:
+        print(f"Error loading permissions: {e}")
+        return []
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "CRMC-EAS Backend"
@@ -16,6 +32,12 @@ class Settings(BaseSettings):
         "SECRET_KEY",
         "THIS_IS_A_VERY_LONG_AND_SECURE_DEFAULT_SECRET_KEY_NEVER_USE_IN_PRODUCTION"
     )
+
+    _all_permissions: List[str] = load_permission_values()
+    def get_permission_values(self, exclude: List[str] = None) -> List[str]:
+        if exclude is None:
+            exclude = []
+        return [p for p in self._all_permissions if p not in exclude]
 
     FILES_STORAGE_PATH: str = "uploads"
     FILES_STATIC_URL: str = "/static"

@@ -1,13 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
+import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export function SignInClient() {
-  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const detail = searchParams.get("detail");
 
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (detail) {
+      toast.error("Login Failed", {
+        description: detail,
+        duration: 5000,
+      });
+    }
+  }, [detail]);
   const handleGoogleLogin = () => {
     setIsLoading(true);
     window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signin/google`;

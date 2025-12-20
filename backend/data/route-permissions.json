@@ -1,0 +1,29 @@
+[
+  {
+    "value": "manage-department",
+    "label": "Manage Department",
+    "nav": {
+      "title": "Departments",
+      "icon": "Building",
+      "href": "/departments"
+    }
+  },
+  {
+    "value": "manage-users",
+    "label": "Manage Users",
+    "nav": {
+      "title": "Staff List",
+      "icon": "Users",
+      "href": "/users"
+    }
+  },
+  {
+    "value": "system-settings",
+    "label": "System Settings",
+    "nav": {
+      "title": "Settings",
+      "icon": "Settings",
+      "href": "/settings"
+    }
+  }
+]
