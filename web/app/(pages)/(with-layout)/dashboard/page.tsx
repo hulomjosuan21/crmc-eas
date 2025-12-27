@@ -1,14 +1,12 @@
 "use client";
-
-import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-  const { authDepartment, isLoading } = useAuth();
+  const router = useRouter();
   return (
-    <div className="p-8">
-      <pre>
-        {isLoading ? "Loading..." : JSON.stringify(authDepartment, null, 2)}
-      </pre>
-    </div>
+    <section>
+      <Button onClick={() => router.push("/add-event")}>Add Event</Button>
+    </section>
   );
 }

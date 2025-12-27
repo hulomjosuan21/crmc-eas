@@ -1,20 +1,18 @@
 import socketio
 
+from src.namespaces.attendance_namespace import AttendanceNamespace
+
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://hideously-patient-dolphin.ngrok-free.app"
+]
+
 sio = socketio.AsyncServer(
-    async_mode="asgi",
-    cors_allowed_origins="*",
+    async_mode='asgi',
+    cors_allowed_origins=origins,
+    logger=False,
+    engineio_logger=False
 )
 
-socketio_asgi = socketio.ASGIApp(sio)
-
-@sio.event
-async def connect(sid, environ):
-    print(f"Client connected: {sid}")
-
-@sio.event
-async def disconnect(sid):
-    print(f"Client disconnected: {sid}")
-
-@sio.event
-async def print_server(sid, data):
-    return {"msg": "pong","echo":data}
+sio.register_namespace(AttendanceNamespace('/attendance'))

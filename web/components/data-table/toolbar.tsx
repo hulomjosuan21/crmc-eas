@@ -19,6 +19,7 @@ interface DataTableToolbarProps<TData> {
   searchLabel: string;
   leftActions?: ReactNode;
   rightActions?: ReactNode;
+  className?: string;
 }
 
 export function DataTableToolbar<TData>({
@@ -27,17 +28,22 @@ export function DataTableToolbar<TData>({
   searchLabel,
   leftActions,
   rightActions,
+  className,
 }: DataTableToolbarProps<TData>) {
   return (
-    <div className="flex items-center justify-between py-4 gap-2">
+    <div
+      className={`flex items-center justify-between py-4 gap-2 ${
+        className ?? ""
+      }`}
+    >
       <div className="flex items-center gap-2">
         <Input
+          variant="sm"
           placeholder={`Filter by ${searchLabel}...`}
           value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn(searchKey)?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
         />
         {leftActions}
       </div>
@@ -47,7 +53,7 @@ export function DataTableToolbar<TData>({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" size={"sm"}>
               Columns <ChevronDown className="ml-2" size={16} />
             </Button>
           </DropdownMenuTrigger>

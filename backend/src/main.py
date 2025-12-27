@@ -1,4 +1,6 @@
 import os
+
+import socketio
 from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
@@ -11,7 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.api.router import api_router
 from src.core.config import settings
 from src.core.exceptions import DomainException
-from src.core.socket import socketio_asgi
+from src.core.socket import sio
 
 async def exception_handler(request: Request, exc: Exception):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -59,6 +61,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 app.add_middleware(
     SessionMiddleware,
@@ -68,9 +71,9 @@ app.add_middleware(
     https_only=False,
     max_age=3600
 )
+app.add_exception_handler(HTTPException, exception_handler)
+app.add_exception_handler(RequestValidationError, exception_handler)
 app.add_exception_handler(DomainException, exception_handler)
-app.add_exception_handler(OperationalError, exception_handler)
-app.add_exception_handler(DBAPIError, exception_handler)
 app.add_exception_handler(Exception, exception_handler)
 
 app.mount(
@@ -83,5 +86,9 @@ app.include_router(api_router)
 for route in app.routes:
     if isinstance(route, APIRoute):
         print(f"Path: {route.path} | Name: {route.name} | Methods: {route.methods}")
-app.mount("/ws",socketio_asgi)
 
+app = socketio.ASGIApp(
+    socketio_server=sio,
+    other_asgi_app=app,
+    socketio_path='socket.io'
+)

@@ -45,7 +45,6 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
     required this.ring,
   });
 
-  // --- Light Theme Factory ---
   static const light = ColorsExtension(
     background: ColorPalette.white,
     foreground: ColorPalette.neutral950,
@@ -68,7 +67,6 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
     ring: ColorPalette.neutral950,
   );
 
-  // --- Dark Theme Factory ---
   static const dark = ColorsExtension(
     background: ColorPalette.neutral950,
     foreground: ColorPalette.neutral50,

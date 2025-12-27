@@ -1,20 +1,7 @@
 import 'package:flutter/material.dart' hide Theme;
 import 'package:mobile/core/theme/app_theme.dart';
-import 'package:mobile/core/theme/theme_extensions.dart';
-
-class Home extends StatelessWidget {
-  const Home({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Home", style: TextStyle(color: context.color.primary)),
-      ),
-      body: Center(child: Text("Click Me!")),
-    );
-  }
-}
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile/screens/home.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -28,12 +15,13 @@ class App extends StatelessWidget {
 
       themeMode: ThemeMode.system,
       title: "School-EAS",
-      home: const Home(),
+      home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 Future<void> main() async {
+  await dotenv.load(fileName: ".env.local");
   runApp(const App());
 }

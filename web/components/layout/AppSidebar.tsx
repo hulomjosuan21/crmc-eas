@@ -1,6 +1,12 @@
 "use client";
 
-import { Calendar, Command, LayoutDashboard, UsersRound } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  Command,
+  LayoutDashboard,
+  UsersRound,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -27,6 +33,7 @@ const navItem = {
     { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { title: "Event Calendar", icon: Calendar, href: "/event-calendar" },
     { title: "Manage Officer", icon: UsersRound, href: "/manage-officer" },
+    { title: "Program", icon: BookOpen, href: "/program" },
   ],
 };
 

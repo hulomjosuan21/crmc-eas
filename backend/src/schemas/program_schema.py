@@ -34,3 +34,12 @@ class ProgramCreateSchema(BaseModel):
     class Config:
         orm_mode = True
         populate_by_name = True
+
+class ProgramRead(BaseModel):
+    programId: str
+    programName: str
+    programCode: str
+    departmentId: str
+
+    class Config:
+        from_attributes = True

@@ -16,6 +16,10 @@ from src.models.department_model import Department
 from src.models.student_model import Student
 from src.models.officer_model import Officer
 from src.models.program_model import Program
+from src.models.event_model import Event
+from src.models.event_media_model import EventMedia
+from src.models.tags_model import EventTag
+from src.models.audience_model import Audience
 # (Import other models here as you create them)
 # ---------------------------------------------------------
 

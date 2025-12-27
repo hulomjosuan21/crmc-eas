@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from src.api.routes.base_router import BaseRouter
 from src.core.response import BaseResponse
 from src.schemas.program_schema import ProgramCreateSchema
@@ -9,7 +11,14 @@ class ProgramRouter(BaseRouter):
     tags = ["Program"]
 
     def _register_routes(self):
-        @self.router.post("/new", name="create_new_program")
+        @self.router.get("/list/{department_id}")
+        async def list_programs(department_id: UUID, request: Request):
+            db = request.state.db
+            service = ProgramService(db)
+            result = await service.get_programs_by_department_id(department_id=department_id)
+            return BaseResponse([item.model_dump() for item in result])
+
+        @self.router.post("/create", name="create_new_program")
         async def create_new_program(payload: ProgramCreateSchema, request: Request):
             db = request.state.db
             service = ProgramService(db)
