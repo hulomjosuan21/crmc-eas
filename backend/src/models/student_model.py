@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from datetime import datetime
 
-from sqlalchemy import String, ForeignKey, DateTime, func
+from sqlalchemy import String, ForeignKey, DateTime, func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,6 +12,7 @@ from src.core.database import Base
 
 if TYPE_CHECKING:
     from src.models.department_model import Department
+    from src.models.program_model import Program
 
 class Student(Base):
     __tablename__ = "students_table"
@@ -20,8 +21,8 @@ class Student(Base):
 
     student_image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
-    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    last_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    last_name: Mapped[str] = mapped_column(String(150), index=True, nullable=False)
 
     department_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -41,9 +42,23 @@ class Student(Base):
         nullable=False
     )
 
+    department: Mapped[Optional["Department"]] = relationship(
+        "Department",
+        lazy="raise",
+    )
+
+    program: Mapped[Optional["Program"]] = relationship(
+        "Program",
+        lazy="raise",
+    )
+
     student_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     student_updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_student_full_name", "first_name", "last_name"),
     )

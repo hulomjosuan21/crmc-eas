@@ -18,7 +18,14 @@ class ProgramRouter(BaseRouter):
             result = await service.get_programs_by_department_id(department_id=department_id)
             return BaseResponse([item.model_dump() for item in result])
 
-        @self.router.post("/create", name="create_new_program")
+        @self.router.get("/select-options/{department_id}")
+        async def select_options(department_id: UUID, request: Request):
+            db = request.state.db
+            service = ProgramService(db)
+            result = await service.get_programs_for_select_options(department_id=department_id)
+            return BaseResponse([item.model_dump() for item in result])
+
+        @self.router.post("/create")
         async def create_new_program(payload: ProgramCreateSchema, request: Request):
             db = request.state.db
             service = ProgramService(db)
@@ -29,4 +36,17 @@ class ProgramRouter(BaseRouter):
 
             return BaseResponse(
                 detail=f"{new_program.program_name} program created successfully.",
+            )
+
+        @self.router.delete("/delete/{program_id}")
+        async def delete_program(program_id: UUID, request: Request):
+            db = request.state.db
+            service = ProgramService(db)
+
+            await service.delete_program_by_program_id(program_id=program_id)
+
+            await db.commit()
+
+            return BaseResponse(
+                detail=f"Program deleted successfully.",
             )

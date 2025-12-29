@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "../data")
 PERMISSIONS_FILE = os.path.join(DATA_DIR, "route-permissions.json")
+STUDENT_SCHOOL_DB = os.path.join(DATA_DIR, "fake_school_db.json")
 ENV_PATH = os.path.join(BASE_DIR, "../.env.local")
 
 # Debug: Uncomment this to see exactly where it is looking if it still fails

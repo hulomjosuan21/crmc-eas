@@ -1,6 +1,5 @@
 from fastapi import HTTPException, status
 
-
 class DomainException(HTTPException):
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
     code: str = "SERVER_ERROR"

@@ -19,3 +19,4 @@ starlette
 itsdangerous
 httpx
 orjson
+aiofiles

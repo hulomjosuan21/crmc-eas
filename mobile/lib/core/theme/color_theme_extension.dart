@@ -11,6 +11,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
   final Color popoverForeground;
   final Color primary;
   final Color primaryForeground;
+  final Color primaryMutedForeground;
   final Color secondary;
   final Color secondaryForeground;
   final Color muted;
@@ -32,6 +33,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
     required this.popoverForeground,
     required this.primary,
     required this.primaryForeground,
+    required this.primaryMutedForeground,
     required this.secondary,
     required this.secondaryForeground,
     required this.muted,
@@ -52,6 +54,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
     cardForeground: ColorPalette.neutral950,
     popover: ColorPalette.white,
     popoverForeground: ColorPalette.neutral950,
+    primaryMutedForeground: ColorPalette.neutral500,
     primary: ColorPalette.primary,
     primaryForeground: ColorPalette.white,
     secondary: ColorPalette.neutral100,
@@ -76,6 +79,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
     popoverForeground: ColorPalette.neutral50,
     primary: ColorPalette.primary,
     primaryForeground: ColorPalette.white,
+    primaryMutedForeground: ColorPalette.neutral500,
     secondary: ColorPalette.neutral800,
     secondaryForeground: ColorPalette.neutral50,
     muted: ColorPalette.neutral800,
@@ -120,6 +124,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
       popoverForeground: popoverForeground ?? this.popoverForeground,
       primary: primary ?? this.primary,
       primaryForeground: primaryForeground ?? this.primaryForeground,
+      primaryMutedForeground: primaryMutedForeground,
       secondary: secondary ?? this.secondary,
       secondaryForeground: secondaryForeground ?? this.secondaryForeground,
       muted: muted ?? this.muted,
@@ -156,6 +161,11 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
       primaryForeground: Color.lerp(
         primaryForeground,
         other.primaryForeground,
+        t,
+      )!,
+      primaryMutedForeground: Color.lerp(
+        primaryMutedForeground,
+        other.primaryMutedForeground,
         t,
       )!,
       secondary: Color.lerp(secondary, other.secondary, t)!,

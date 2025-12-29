@@ -68,7 +68,10 @@ export function DataTableToolbar<TData>({
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {column.id}
+                  {column.id
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/^./, (str) => str.toUpperCase())
+                    .trim()}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>

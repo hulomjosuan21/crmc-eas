@@ -1,5 +1,6 @@
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, field_validator, Field, ConfigDict
 from uuid import UUID
+from datetime import datetime
 
 class ProgramCreateSchema(BaseModel):
     program_code: str = Field(..., alias="programCode")
@@ -31,15 +32,24 @@ class ProgramCreateSchema(BaseModel):
             raise ValueError("Department ID is required")
         return v
 
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+class ProgramSelectOption(BaseModel):
+    programId: str
+    programName: str
+    programCode: str
     class Config:
-        orm_mode = True
-        populate_by_name = True
+        from_attributes = True
 
 class ProgramRead(BaseModel):
     programId: str
     programName: str
     programCode: str
     departmentId: str
-
+    programCreatedAt: datetime
+    programUpdatedAt: datetime
     class Config:
         from_attributes = True

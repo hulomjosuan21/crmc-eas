@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from src.api.routes.audience_router import AudienceRouter
 from src.api.routes.auth_router import AuthRouter
 from src.api.routes.department_router import DepartmentRouter
 from src.api.routes.officer_router import OfficerRouter
@@ -13,7 +14,8 @@ routers = [
     DepartmentRouter(),
     OfficerRouter(),
     StudentRouter(),
-    ProgramRouter()
+    ProgramRouter(),
+    AudienceRouter()
 ]
 
 for router in routers:

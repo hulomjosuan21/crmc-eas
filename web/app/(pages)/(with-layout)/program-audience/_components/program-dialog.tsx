@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,12 +24,15 @@ import { Program, CreateProgram } from "@/types/program_types";
 import { getError } from "@/lib/error";
 import { createProgramSchema } from "@/schemas/program.schema";
 import { programService } from "@/services/program.service";
+import { VisuallyHidden } from "radix-ui";
+import { ApiResponse } from "@/lib/response";
 
 interface ProgramFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   program?: Program | null;
   departmentId: string;
+  refresh: () => Promise<any>;
 }
 
 export function ProgramDialog({
@@ -36,8 +40,8 @@ export function ProgramDialog({
   onOpenChange,
   program,
   departmentId,
+  refresh,
 }: ProgramFormDialogProps) {
-  const queryClient = useQueryClient();
   const [inputData, setInputData] = useState({
     programName: "",
     programCode: "",
@@ -58,9 +62,9 @@ export function ProgramDialog({
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateProgram) => programService.createOne(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["department-programs"] });
-      toast.success("Program created successfully");
+    onSuccess: async (response: ApiResponse) => {
+      await refresh();
+      toast.success(response.code, { description: response.detail });
       onOpenChange(false);
     },
     onError: (err) => {
@@ -75,12 +79,14 @@ export function ProgramDialog({
         setTimeout(() => resolve({ success: true }), 1500);
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["department-programs"] });
-      toast.info("Update successful (Mock mode)", {
-        description: "The UI refreshed, but no backend call was made yet.",
-      });
+    onSuccess: async (response: any) => {
+      await refresh();
+      toast.success(response.code, { description: response.detail });
       onOpenChange(false);
+    },
+    onError: (err) => {
+      const { title, description } = getError(err);
+      toast.error(title, { description });
     },
   });
 
@@ -113,6 +119,9 @@ export function ProgramDialog({
           <DialogTitle>
             {program ? "Edit Program" : "Add New Program"}
           </DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>dialog description goes here.</DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
         <FieldGroup className="">
           <Field>

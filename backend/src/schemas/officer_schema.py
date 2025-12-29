@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 from uuid import UUID
 
@@ -13,7 +13,7 @@ class CreateOfficerSchema(BaseModel):
         alias="assignedPermissions"
     )
 
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True
-    }
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )

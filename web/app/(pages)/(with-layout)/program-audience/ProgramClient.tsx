@@ -14,6 +14,7 @@ import {
 import { ProgramTableActions } from "./_components/program-action-cell";
 import { ProgramDialog } from "./_components/program-dialog";
 import { programService } from "@/services/program.service";
+import { formatDateTime } from "@/lib/formatters";
 
 export default function ProgramClient() {
   const { authDepartmentId } = useAuth();
@@ -38,6 +39,8 @@ export default function ProgramClient() {
       return await programService.getMany(authDepartmentId!);
     },
     enabled: !!authDepartmentId,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const handleRefetch = () => {
@@ -59,10 +62,27 @@ export default function ProgramClient() {
         header: "Program Code",
       },
       {
+        accessorKey: "programCreatedAt",
+        header: "Created At",
+        cell: ({ getValue }) => {
+          const rawValue = getValue<string>();
+          return formatDateTime(rawValue);
+        },
+      },
+      {
+        accessorKey: "programUpdatedAt",
+        header: "Updated At",
+        cell: ({ getValue }) => {
+          const rawValue = getValue<string>();
+          return formatDateTime(rawValue);
+        },
+      },
+      {
         id: "actions",
         cell: ({ row }) => (
           <ProgramTableActions
             program={row.original}
+            refresh={refetch}
             onEdit={(p) => {
               setSelectedProgram(p);
               setIsDialogOpen(true);
@@ -115,6 +135,7 @@ export default function ProgramClient() {
         onOpenChange={setIsDialogOpen}
         program={selectedProgram}
         departmentId={authDepartmentId!}
+        refresh={refetch}
       />
       <div className="overflow-auto">
         <DataTable
