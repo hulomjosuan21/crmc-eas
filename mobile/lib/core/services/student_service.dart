@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:mobile/core/models/student_sync_model.dart';
 import 'package:mobile/core/network/dio_client.dart';
+import 'package:mobile/utils/logger.dart';
 
 class StudentRepository {
   // Access the box directly since we opened it in main.dart
@@ -23,8 +24,7 @@ class StudentRepository {
         return StudentSync.fromMap(Map<String, dynamic>.from(payload));
       }
     } catch (e) {
-      print("Network sync failed: $e. Falling back to cache.");
-      // If network fails, silently return the cached version
+      logger.i("Network sync failed: $e. Falling back to cache.");
       return getCachedStudentOnly();
     }
     return null;

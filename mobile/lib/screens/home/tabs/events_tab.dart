@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/core/theme/theme_context_extensions.dart';
+import 'package:mobile/core/widget/small_generic_dropdown.dart';
+import 'package:mobile/core/widget/styled_section_header.dart';
 import 'package:mobile/screens/home/widget/event_card.dart';
 import 'package:mobile/screens/home/widget/featured_events_list.dart';
 
@@ -40,13 +42,10 @@ class _EventsTabState extends State<EventsTab> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 5),
-                  child: Text(
-                    "Upcoming",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colors.foreground,
-                    ),
+                  child: StyledSectionHeader(
+                    title: "For you",
+                    foregroundColor: colors.foreground,
+                    accentColor: colors.primary,
                   ),
                 ),
                 const FeaturedEventsList(),
@@ -67,54 +66,25 @@ class _EventsTabState extends State<EventsTab> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "All",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colors.foreground,
-                      ),
+                    StyledSectionHeader(
+                      title: "All",
+                      foregroundColor: colors.foreground,
+                      accentColor: colors.primary,
                     ),
 
-                    Container(
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: colors.background,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: colors.background),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedDepartment,
-                          isDense: true,
-                          borderRadius: BorderRadius.circular(12),
-                          icon: Icon(
-                            Icons.keyboard_arrow_down,
-                            color: colors.foreground,
-                            size: 16,
-                          ),
-                          style: TextStyle(
-                            color: colors.foreground,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10,
-                          ),
-                          dropdownColor: colors.background,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedDepartment = newValue!;
-                            });
-                          },
-                          items: _departments.map<DropdownMenuItem<String>>((
-                            String value,
-                          ) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                    SmallGenericDropdown<String>(
+                      value: _selectedDepartment,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.primaryForeground,
+                      items: _departments
+                          .map(
+                            (dept) =>
+                                GenericDropdownItem(value: dept, label: dept),
+                          )
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() => _selectedDepartment = newValue!);
+                      },
                     ),
                   ],
                 ),

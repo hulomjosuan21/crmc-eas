@@ -120,7 +120,6 @@ class _EventCardState extends State<EventCard>
               bottom: 0,
               left: 0,
               child: Opacity(
-                // Fades out faster than the background fades in for cleanliness
                 opacity: (1.0 - _dragPercentage * 2.0).clamp(0.0, 1.0),
                 child: Container(
                   width: 230,
@@ -148,19 +147,18 @@ class _EventCardState extends State<EventCard>
               ),
             ),
 
-            // Optional: Visual indicator (arrow) to hint user to swipe left
             Positioned(
               right: 10,
               top: 0,
               bottom: 0,
               child: Opacity(
-                // Only show when closed (0.0), hide when open (1.0)
                 opacity: (1.0 - _dragPercentage).clamp(0.0, 1.0),
-                child: const Center(
+                child: Center(
                   child: Icon(
-                    Icons.chevron_left,
-                    color: Colors.white70,
-                    size: 30,
+                    Iconsax.arrow_left_2,
+                    color: colors.mutedForeground,
+                    size: 24,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

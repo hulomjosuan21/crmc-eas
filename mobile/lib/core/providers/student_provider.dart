@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/core/models/student_sync_model.dart';
-import 'package:mobile/core/repositories/student_repo.dart';
+import 'package:mobile/core/services/student_service.dart';
 
 class StudentProvider extends ChangeNotifier {
   final StudentRepository _repository;

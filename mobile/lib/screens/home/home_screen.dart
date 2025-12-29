@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:mobile/core/providers/student_provider.dart';
 import 'package:mobile/core/theme/theme_context_extensions.dart';
-import 'package:mobile/screens/home/widget/events_tab.dart';
-import 'package:mobile/screens/home/widget/floating_nav_bar.dart';
+import 'package:mobile/screens/home/tabs/events_tab.dart';
 import 'package:mobile/screens/home/widget/home_header.dart';
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,12 +19,6 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-
-    Future.microtask(() {
-      if (mounted) {
-        context.read<StudentProvider>().loadStudentData("202200611");
-      }
-    });
   }
 
   @override
@@ -42,10 +33,10 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       backgroundColor: colors.secondary,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
               children: [
                 const HomeHeader(),
                 Container(
@@ -89,15 +80,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ],
             ),
-          ),
-
-          const Positioned(
-            bottom: 30,
-            left: 0,
-            right: 0,
-            child: FloatingNavBar(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

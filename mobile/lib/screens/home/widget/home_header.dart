@@ -47,9 +47,11 @@ class HomeHeader extends StatelessWidget {
           ),
           const Spacer(),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, '/search/josuan');
+            },
             icon: const Icon(
-              Iconsax.search_normal_1,
+              Iconsax.search_normal,
               size: 24,
               fontWeight: FontWeight.bold,
             ),
