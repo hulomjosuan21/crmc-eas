@@ -10,16 +10,16 @@ from src.core.database import Base
 if TYPE_CHECKING:
     from src.models.program_model import Program
 
-class Audience(Base):
-    __tablename__ = "audience_table"
+class EventAudience(Base):
+    __tablename__ = "event_audience_table"
 
-    audience_id: Mapped[uuid.UUID] = mapped_column(
+    event_audience_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4
     )
 
-    audience_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    event_audience_name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     department_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -38,8 +38,8 @@ class Audience(Base):
         lazy="raise",
     )
 
-    audience_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    audience_updated_at: Mapped[datetime] = mapped_column(
+    event_audience_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    event_audience_updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now()
