@@ -4,18 +4,18 @@ from pydantic import BaseModel, field_validator, Field, ConfigDict
 from uuid import UUID
 from datetime import datetime
 
-class AudienceCreateSchema(BaseModel):
-    audience_name: str = Field(..., alias="audienceName")
+class EventAudienceCreateSchema(BaseModel):
+    event_audience_name: str = Field(..., alias="eventAudienceName")
     program_id: UUID = Field(..., alias="programId")
     department_id: UUID = Field(..., alias="departmentId")
 
-    @field_validator("audience_name")
+    @field_validator("event_audience_name")
     @classmethod
-    def validate_audience_name(cls, v):
+    def validate_event_audience_name(cls, v):
         if not v:
-            raise ValueError("Audience code is required")
+            raise ValueError("Event audience code is required")
         if len(v) > 20:
-            raise ValueError("Audience code must be at most 20 characters")
+            raise ValueError("Event audience code must be at most 20 characters")
         return v
 
     @field_validator("program_id")
@@ -37,12 +37,12 @@ class AudienceCreateSchema(BaseModel):
         populate_by_name=True,
     )
 
-class AudienceRead(BaseModel):
-    audienceId: str
-    audienceName: str
+class EventAudienceRead(BaseModel):
+    eventAudienceId: str
+    eventAudienceName: str
     departmentId: str
     programId: Optional[str] = None
     programName: Optional[str] = None
     programCode: Optional[str] = None
-    audienceCreatedAt: datetime
-    audienceUpdatedAt: datetime
+    eventAudienceCreatedAt: datetime
+    eventAudienceUpdatedAt: datetime

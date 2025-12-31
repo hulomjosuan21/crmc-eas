@@ -9,7 +9,6 @@ from sqlalchemy.dialects.postgresql import UUID, TSTZRANGE
 from datetime import datetime
 
 if TYPE_CHECKING:
-    from src.models.event_media_model import EventMedia
     from src.models.tags_model import EventTag
 
 class EventEnumVisibility(str, enum.Enum):
@@ -60,8 +59,10 @@ class Event(Base):
         lazy="raise"
     )
 
+    enable_image_reactions: Mapped[bool] = mapped_column(default=True, nullable=False)
+    enable_video_reactions: Mapped[bool] = mapped_column(default=True, nullable=False)
+
     event_tags: Mapped[List["EventTag"]] = relationship("EventTag",cascade="all, delete-orphan",lazy="raise",order_by="EventTag.tag_name")
-    event_media: Mapped[List["EventMedia"]] = relationship("EventMedia",cascade="all, delete-orphan",lazy="raise")
 
     event_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     event_updated_at: Mapped[datetime] = mapped_column(
