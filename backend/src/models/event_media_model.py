@@ -48,10 +48,20 @@ class EventMediaImageLike(Base):
     __table_args__ = (
         UniqueConstraint('event_media_image_id', 'student_id', name='_student_event_image_like_uc'),
     )
+
 class EventMediaVideoReactionType(str, enum.Enum):
-    LIKE = "like" # Maybe +1
-    LOVE = "love" # Maybe +2
-    FIRE = "fire" # Maybe +3
+    LIKE = "like"
+    LOVE = "love"
+    FIRE = "fire"
+
+    @property
+    def points(self) -> int:
+        mapping = {
+            EventMediaVideoReactionType.LIKE: 1,
+            EventMediaVideoReactionType.LOVE: 2,
+            EventMediaVideoReactionType.FIRE: 3,
+        }
+        return mapping[self]
 
 class EventMediaVideo(Base):
     __tablename__ = "event_media_videos_table"
