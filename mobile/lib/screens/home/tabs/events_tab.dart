@@ -134,8 +134,8 @@ class _StickyFilterDelegate extends SliverPersistentHeaderDelegate {
         boxShadow: isPinned
             ? [
                 const BoxShadow(
-                  color: Color.fromRGBO(0, 0, 0, 0.09),
-                  blurRadius: 12,
+                  color: Color.fromRGBO(0, 0, 0, 0.04),
+                  blurRadius: 6,
                   spreadRadius: 0,
                   offset: Offset(0, 3),
                 ),

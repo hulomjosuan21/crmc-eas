@@ -18,10 +18,9 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider(create: (_) => StudentRepository()),
+        Provider(create: (_) => StudentService()),
         ChangeNotifierProvider(
-          create: (context) =>
-              StudentProvider(context.read<StudentRepository>()),
+          create: (context) => StudentProvider(context.read<StudentService>()),
         ),
       ],
       child: const App(),

@@ -47,12 +47,6 @@ class Event(Base):
         nullable=False
     )
 
-    event_target_program_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("programs_table.program_id", ondelete="SET NULL"),
-        nullable=True
-    )
-
     department_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("departments_table.department_id", ondelete="CASCADE"),
@@ -66,7 +60,7 @@ class Event(Base):
         lazy="raise"
     )
 
-    event_tags: Mapped[List["EventTag"]] = relationship("EventTag",cascade="all, delete-orphan",lazy="raise")
+    event_tags: Mapped[List["EventTag"]] = relationship("EventTag",cascade="all, delete-orphan",lazy="raise",order_by="EventTag.tag_name")
     event_media: Mapped[List["EventMedia"]] = relationship("EventMedia",cascade="all, delete-orphan",lazy="raise")
 
     event_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

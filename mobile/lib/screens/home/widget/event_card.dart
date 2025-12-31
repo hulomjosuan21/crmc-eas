@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:mobile/core/theme/theme_context_extensions.dart';
+import 'package:mobile/screens/event/event_screen.dart';
 
 class EventCard extends StatefulWidget {
   const EventCard({super.key});
@@ -14,8 +16,9 @@ class _EventCardState extends State<EventCard>
   late AnimationController _controller;
 
   double _dragPercentage = 0.0;
-
   final double _dragSensitivity = 200.0;
+
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -37,7 +40,33 @@ class _EventCardState extends State<EventCard>
     super.dispose();
   }
 
+  Future<void> _handleTap() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _dragPercentage = 0.0;
+    });
+
+    _controller.stop();
+
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const EventScreen()));
+  }
+
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    // Disable drag if loading
+    if (_isLoading) return;
+
     double delta = details.primaryDelta! / _dragSensitivity;
 
     setState(() {
@@ -46,6 +75,8 @@ class _EventCardState extends State<EventCard>
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
+    if (_isLoading) return;
+
     double velocity = details.primaryVelocity ?? 0;
 
     if (velocity < -500) {
@@ -66,6 +97,7 @@ class _EventCardState extends State<EventCard>
     final colors = context.color;
 
     return GestureDetector(
+      onTap: _handleTap,
       onHorizontalDragUpdate: _onHorizontalDragUpdate,
       onHorizontalDragEnd: _onHorizontalDragEnd,
       child: Container(
@@ -84,85 +116,101 @@ class _EventCardState extends State<EventCard>
             Container(
               color: Colors.black.withValues(alpha: _dragPercentage * 0.85),
             ),
-            Center(
-              child: Opacity(
-                opacity: _dragPercentage,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Iconsax.calendar_1,
-                      color: colors.primaryForeground,
-                      size: 40,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Oct 24, 2025",
-                      style: TextStyle(
+
+            if (!_isLoading)
+              Center(
+                child: Opacity(
+                  opacity: _dragPercentage,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Iconsax.calendar_1,
                         color: colors.primaryForeground,
-                        fontWeight: FontWeight.bold,
+                        size: 40,
                       ),
-                    ),
-                    Text(
-                      "8:00 PM",
-                      style: TextStyle(
-                        color: colors.primaryMutedForeground,
-                        fontSize: 18,
+                      const SizedBox(height: 8),
+                      Text(
+                        "Oct 24, 2025",
+                        style: TextStyle(
+                          color: colors.primaryForeground,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        "8:00 PM",
+                        style: TextStyle(
+                          color: colors.primaryMutedForeground,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // 3. Original Title Layer (Fades Out)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              child: Opacity(
-                opacity: (1.0 - _dragPercentage * 2.0).clamp(0.0, 1.0),
+            if (!_isLoading)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: Opacity(
+                  opacity: (1.0 - _dragPercentage * 2.0).clamp(0.0, 1.0),
+                  child: Container(
+                    width: 230,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.secondary,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: const SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Text(
+                        "Event title here that is very long",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            if (!_isLoading)
+              Positioned(
+                right: 10,
+                top: 0,
+                bottom: 0,
+                child: Opacity(
+                  opacity: (1.0 - _dragPercentage).clamp(0.0, 1.0),
+                  child: Center(
+                    child: Icon(
+                      Iconsax.arrow_left_2,
+                      color: colors.secondaryForeground,
+                      size: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+            if (_isLoading)
+              Positioned.fill(
                 child: Container(
-                  width: 230,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.secondary,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: const SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Text(
-                      "Event title here that is very long",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                  color: Colors.black.withValues(alpha: 0.85),
+                  child: Center(
+                    child: LoadingAnimationWidget.threeArchedCircle(
+                      color: colors.primaryForeground,
+                      size: 28,
                     ),
                   ),
                 ),
               ),
-            ),
-
-            Positioned(
-              right: 10,
-              top: 0,
-              bottom: 0,
-              child: Opacity(
-                opacity: (1.0 - _dragPercentage).clamp(0.0, 1.0),
-                child: Center(
-                  child: Icon(
-                    Iconsax.arrow_left_2,
-                    color: colors.mutedForeground,
-                    size: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),

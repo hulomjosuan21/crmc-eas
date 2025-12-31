@@ -5,7 +5,7 @@ import 'color_theme_extension.dart';
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: 'GoogleSans',
+    fontFamily: 'Montserrat',
     brightness: Brightness.light,
     scaffoldBackgroundColor: ColorPalette.white,
     extensions: [ColorsExtension.light],
@@ -13,7 +13,7 @@ class AppTheme {
     iconTheme: const IconThemeData(color: ColorPalette.neutral900),
 
     textTheme: ThemeData.light().textTheme.apply(
-      fontFamily: 'GoogleSans',
+      fontFamily: 'Montserrat',
       bodyColor: ColorPalette.neutral950,
       displayColor: ColorPalette.neutral950,
     ),
@@ -41,7 +41,7 @@ class AppTheme {
 
   static final ThemeData darkTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: 'GoogleSans',
+    fontFamily: 'Montserrat',
     brightness: Brightness.dark,
     scaffoldBackgroundColor: ColorPalette.neutral950,
 
@@ -50,7 +50,7 @@ class AppTheme {
     iconTheme: const IconThemeData(color: ColorPalette.neutral50),
 
     textTheme: ThemeData.dark().textTheme.apply(
-      fontFamily: 'GoogleSans',
+      fontFamily: 'Montserrat',
       bodyColor: ColorPalette.neutral50,
       displayColor: ColorPalette.neutral50,
     ),

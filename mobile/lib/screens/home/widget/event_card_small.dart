@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:mobile/core/theme/theme_context_extensions.dart';
+import 'package:mobile/screens/event/event_screen.dart';
 
 class EventCardSmall extends StatefulWidget {
   final String imageUrl;
@@ -22,21 +24,22 @@ class _EventCardSmallState extends State<EventCardSmall>
   late Animation<double> _fadeAnimation;
   late Animation<double> _titleFadeOut;
 
+  // 1. Add loading state
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250), // Fast snap effect
+      duration: const Duration(milliseconds: 250),
     );
 
-    // Animation for the Dark Overlay + Date (0.0 to 1.0)
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOut,
     );
 
-    // Animation to hide the original Title (1.0 to 0.0)
     _titleFadeOut = Tween<double>(
       begin: 1.0,
       end: 0.0,
@@ -49,24 +52,48 @@ class _EventCardSmallState extends State<EventCardSmall>
     super.dispose();
   }
 
+  // 2. Handle Tap Logic
+  Future<void> _handleTap() async {
+    // If interaction is locked or loading, do nothing
+    if (_isLoading) return;
+
+    // Logic: If the "peek" overlay is showing, tap simply closes it.
+    // Otherwise, tap navigates.
+    if (_controller.isCompleted || _controller.value > 0.5) {
+      _controller.reverse();
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const EventScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.color;
 
     return GestureDetector(
       onLongPress: () {
-        _controller.forward();
+        if (!_isLoading) _controller.forward();
       },
-      onTap: () {
-        if (_controller.isCompleted || _controller.isAnimating) {
-          _controller.reverse();
-        } else {
-          // tap action (like navigation)
-        }
-      },
+      onTap: _handleTap, // Connected to our handler
       child: Container(
         width: 140,
-        // Ensure clipBehavior is set so the overlay respects the border radius
+        height: 140, // Ensure height is constrained if not by parent
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -77,12 +104,12 @@ class _EventCardSmallState extends State<EventCardSmall>
         ),
         child: Stack(
           children: [
+            // Layer 1: Gradient and Title
             Positioned.fill(
               child: FadeTransition(
-                opacity: _titleFadeOut, // Fades OUT when long pressed
+                opacity: _titleFadeOut,
                 child: Stack(
                   children: [
-                    // Gradient
                     Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
@@ -99,31 +126,30 @@ class _EventCardSmallState extends State<EventCardSmall>
                         ),
                       ),
                     ),
-                    // Title Text
-                    Positioned(
-                      bottom: 12,
-                      left: 12,
-                      right: 12,
-                      child: Text(
-                        widget.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.primaryForeground,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                    if (!_isLoading)
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
+                        child: Text(
+                          widget.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colors.primaryForeground,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
             ),
 
-            // --- Layer B: Dark Overlay & Date (Hidden by default) ---
             Positioned.fill(
               child: FadeTransition(
-                opacity: _fadeAnimation, // Fades IN when long pressed
+                opacity: _fadeAnimation,
                 child: Container(
                   color: Colors.black.withValues(alpha: 0.85),
                   child: Column(
@@ -154,6 +180,19 @@ class _EventCardSmallState extends State<EventCardSmall>
                 ),
               ),
             ),
+
+            if (_isLoading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.85),
+                  child: Center(
+                    child: LoadingAnimationWidget.threeArchedCircle(
+                      color: colors.primaryForeground,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

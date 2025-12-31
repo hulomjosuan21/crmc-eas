@@ -1,46 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/core/models/student_sync_model.dart';
 import 'package:mobile/core/services/student_service.dart';
+import 'package:get_storage/get_storage.dart';
 
 class StudentProvider extends ChangeNotifier {
-  final StudentRepository _repository;
+  final StudentService _service;
+  final _storage = GetStorage(); // Keep this as it's used in login and getter
 
   StudentSync? _student;
   bool _isLoading = false;
 
-  StudentProvider(this._repository);
+  StudentProvider(this._service);
 
   StudentSync? get student => _student;
   bool get isLoading => _isLoading;
 
-  Future<void> loadStudentData(String schoolId) async {
-    // STEP 1: INSTANT LOAD (Offline First)
-    // We check the cache immediately so the user sees data instantly.
-    final cached = _repository.getCachedStudentOnly();
+  // Getter for session status directly from storage
+  bool get isSessionValid => _storage.read('stay_logged_in') ?? false;
+  String? get lastSchoolId => _storage.read('last_school_id');
 
-    if (cached != null) {
+  Future<bool> loadStudentData(String schoolId) async {
+    // 1. Check Cache BUT verify it belongs to the schoolId provided
+    final cached = _service.getCachedStudent();
+
+    if (cached != null && cached.studentSchoolId == schoolId) {
       _student = cached;
-      notifyListeners(); // The UI updates HERE (0ms latency)
+      notifyListeners();
     } else {
-      // Only show a loading spinner if we have absolutely no data (First time user)
+      // If cache belongs to someone else or is empty, show loading
+      _student = null;
       _isLoading = true;
       notifyListeners();
     }
 
-    // STEP 2: BACKGROUND SYNC (Network)
     try {
-      final freshData = await _repository.syncAndGetStudent(schoolId);
-
+      final freshData = await _service.syncAndGetStudent(schoolId);
       if (freshData != null) {
-        // If the server gave us new data, update the UI again
         _student = freshData;
-        notifyListeners();
+        return true;
       }
     } catch (e) {
-      print("Background sync error: $e");
+      if (_student != null) return true;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+    return _student != null;
+  }
+
+  Future<void> login(String schoolId, bool rememberMe) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final success = await loadStudentData(schoolId);
+
+    if (success && _student != null) {
+      await _storage.write('stay_logged_in', rememberMe);
+      await _storage.write('last_school_id', schoolId);
+
+      final String fullName = "${_student!.firstName} ${_student!.lastName}";
+      await _storage.write('last_student_name', fullName.toUpperCase());
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    await _storage.remove('stay_logged_in');
+    await _storage.remove('last_school_id');
+    _student = null;
+    notifyListeners();
   }
 }

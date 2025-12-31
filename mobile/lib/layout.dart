@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:mobile/screens/home/home_screen.dart';
 import 'package:mobile/core/widget/floating_nav_bar.dart';
 import 'package:mobile/core/controllers/nav_controller.dart';
+import 'package:mobile/screens/notification/notification_screen.dart';
 import 'package:mobile/screens/settings/setting_screen.dart';
 
 class Layout extends StatelessWidget {
@@ -20,7 +21,7 @@ class Layout extends StatelessWidget {
               index: navCtrl.currentIndex.value,
               children: const [
                 HomeScreen(),
-                Center(child: Text("Notification Screen")),
+                NotificationScreen(),
                 SettingScreen(),
               ],
             ),

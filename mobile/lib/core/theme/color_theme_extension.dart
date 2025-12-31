@@ -50,7 +50,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
   static const light = ColorsExtension(
     background: ColorPalette.white,
     foreground: ColorPalette.neutral950,
-    card: ColorPalette.white,
+    card: ColorPalette.neutral100,
     cardForeground: ColorPalette.neutral950,
     popover: ColorPalette.white,
     popoverForeground: ColorPalette.neutral950,
@@ -73,7 +73,7 @@ class ColorsExtension extends ThemeExtension<ColorsExtension> {
   static const dark = ColorsExtension(
     background: ColorPalette.neutral950,
     foreground: ColorPalette.neutral50,
-    card: ColorPalette.neutral950,
+    card: ColorPalette.neutral900,
     cardForeground: ColorPalette.neutral50,
     popover: ColorPalette.neutral950,
     popoverForeground: ColorPalette.neutral50,

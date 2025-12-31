@@ -1,207 +1,211 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:local_auth_android/local_auth_android.dart';
+import 'package:mobile/core/models/student_sync_model.dart';
+import 'package:mobile/core/providers/student_provider.dart';
+import 'package:mobile/core/theme/color_palette.dart';
 import 'package:mobile/core/theme/theme_context_extensions.dart';
-import 'package:mobile/core/widget/button.dart';
-import 'package:mobile/core/widget/input.dart';
+import 'package:mobile/screens/auth/views/manual_auth_view.dart';
+import 'package:mobile/screens/auth/views/quick_auth_view.dart';
+import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 
-class SchoolLoginScreen extends StatefulWidget {
-  const SchoolLoginScreen({super.key});
+class StudentAuthScreen extends StatefulWidget {
+  const StudentAuthScreen({super.key});
 
   @override
-  State<SchoolLoginScreen> createState() => _SchoolLoginScreenState();
+  State<StudentAuthScreen> createState() => _StudentAuthScreenState();
 }
 
-class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
-  bool isPending = false;
-  final TextEditingController _schoolIdController = TextEditingController();
+class _StudentAuthScreenState extends State<StudentAuthScreen> {
+  final TextEditingController _idController = TextEditingController();
+  final LocalAuthentication auth = LocalAuthentication();
+  final _storage = GetStorage();
 
-  Future<void> _handleSubmit() async {
-    setState(() {
-      isPending = true;
-    });
+  bool _rememberMe = false;
+  bool _canCheckBiometrics = false;
 
+  String? _cachedSchoolId;
+  String? _cachedName;
+  bool _isUnlockMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAuth();
+  }
+
+  Future<void> _initializeAuth() async {
+    bool canCheck = false;
     try {
-      await Future.delayed(Duration(seconds: 4));
-      final schoolId = _schoolIdController.text.trim();
+      canCheck =
+          await auth.canCheckBiometrics || await auth.isDeviceSupported();
+    } catch (e) {
+      canCheck = false;
+    }
 
-      if (schoolId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Please enter your School ID"),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+    final savedId = _storage.read('last_school_id');
+    final savedName = _storage.read('last_student_name');
 
-      print("ID Submitted: $schoolId");
-    } finally {
+    if (mounted) {
       setState(() {
-        isPending = false;
+        _canCheckBiometrics = canCheck;
+        _cachedSchoolId = savedId;
+        _cachedName = savedName;
+        _isUnlockMode = (savedId != null && canCheck);
       });
     }
+  }
+
+  void _onRememberMeChanged(bool? val) {
+    setState(() => _rememberMe = val ?? false);
+  }
+
+  void _onSwitchAccount() {
+    setState(() {
+      _isUnlockMode = false;
+      _idController.clear();
+    });
+  }
+
+  Future<void> _handleManualAuth() async {
+    if (_idController.text.trim().isEmpty) {
+      _showSnackbar("Required", "Please enter your School ID");
+      return;
+    }
+
+    final provider = context.read<StudentProvider>();
+    await provider.login(_idController.text.trim(), _rememberMe);
+
+    if (provider.student != null) {
+      _updateCache(provider.student!);
+      Get.offAllNamed('/');
+    } else {
+      _showSnackbar("Error", "Student not found or sync failed");
+    }
+  }
+
+  Future<void> _handleBiometricAuth() async {
+    if (_cachedSchoolId == null) return;
+
+    bool authenticated = false;
+
+    try {
+      authenticated = await auth.authenticate(
+        localizedReason: 'Unlock to access School-EAS',
+        authMessages: const [
+          AndroidAuthMessages(
+            signInTitle: 'Student Verification',
+            cancelButton: 'Cancel',
+          ),
+        ],
+      );
+    } on PlatformException catch (e) {
+      if (e.code == 'NotAvailable' ||
+          e.code == 'NotEnrolled' ||
+          e.code == 'UserCanceled' ||
+          e.code == 'UserFallback') {
+        return;
+      }
+      return;
+    }
+
+    if (!authenticated || !mounted) return;
+
+    final provider = context.read<StudentProvider>();
+
+    Get.dialog(
+      Center(
+        child: LoadingAnimationWidget.threeArchedCircle(
+          color: ColorPalette.primary,
+          size: 28,
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      await provider.login(_cachedSchoolId!, false);
+    } finally {
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+    }
+
+    if (provider.student != null) {
+      Get.offAllNamed('/');
+    }
+  }
+
+  void _updateCache(StudentSync student) {
+    final fullName = student.firstName;
+    _storage.write('last_student_name', fullName.toUpperCase());
+  }
+
+  void _showSnackbar(String title, String message) {
+    if (!mounted) return;
+    toastification.show(
+      context: context,
+      type: ToastificationType.error,
+      style: ToastificationStyle.flat,
+      title: Text(title),
+      description: Text(message),
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.color;
+    final isDark = ThemeContext(context).isDarkMode;
+    final isLoading = context.watch<StudentProvider>().isLoading;
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                CustomPaint(
-                  size: const Size(double.infinity, 300),
-                  painter: HeaderWaveShadowPainter(
-                    shadowColor: const Color.fromRGBO(17, 12, 46, 0.15),
-                  ),
-                ),
-
-                ClipPath(
-                  clipper: HeaderWaveClipper(),
-                  child: Container(
-                    width: double.infinity,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          colors.primary,
-                          colors.primary.withValues(alpha: 0.8),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                Positioned(
-                  top: 120,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          "Hi There!",
-                          style: TextStyle(
-                            color: colors.primaryForeground,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+    return AnnotatedRegion(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: colors.background,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: colors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 40.0,
             ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-
-                  Text(
-                    "Student ID",
-                    style: TextStyle(
-                      color: colors.foreground,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
+            child: _isUnlockMode
+                ? QuickAuthView(
+                    cachedName: _cachedName,
+                    idController: _idController,
+                    isLoading: isLoading,
+                    rememberMe: _rememberMe,
+                    onRememberMeChanged: _onRememberMeChanged,
+                    onManualAuth: _handleManualAuth,
+                    onBiometricAuth: _handleBiometricAuth,
+                    onSwitchAccount: _onSwitchAccount,
+                  )
+                : ManualAuthView(
+                    idController: _idController,
+                    isLoading: isLoading,
+                    rememberMe: _rememberMe,
+                    onRememberMeChanged: _onRememberMeChanged,
+                    onManualAuth: _handleManualAuth,
+                    canCheckBiometrics: _canCheckBiometrics,
+                    hasCachedId: _cachedSchoolId != null,
+                    onBackToQuickAuth: () =>
+                        setState(() => _isUnlockMode = true),
                   ),
-                  const SizedBox(height: 8),
-
-                  Input(
-                    hint: "Enter your Student ID",
-                    controller: _schoolIdController,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Button.primary(
-                    label: "Continue",
-                    onPressed: _handleSubmit,
-                    fullWidth: true,
-                    isLoading: isPending,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 40),
-          ],
+          ),
         ),
       ),
     );
   }
-}
-
-class HeaderWaveShadowPainter extends CustomPainter {
-  final Color shadowColor;
-  HeaderWaveShadowPainter({required this.shadowColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    var path = _getWavePath(size);
-
-    // Apply the offset from your snippet: Offset(0, 48)
-    var shiftedPath = path.shift(const Offset(0, 48));
-
-    canvas.drawPath(
-      shiftedPath,
-      Paint()
-        ..color = shadowColor
-        // Convert blurRadius 100 to Sigma (~50)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class HeaderWaveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) => _getWavePath(size);
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-// Shared path logic
-Path _getWavePath(Size size) {
-  var path = Path();
-  path.lineTo(0, size.height - 50);
-
-  var firstControlPoint = Offset(size.width / 4, size.height);
-  var firstEndPoint = Offset(size.width / 2.25, size.height - 30);
-  path.quadraticBezierTo(
-    firstControlPoint.dx,
-    firstControlPoint.dy,
-    firstEndPoint.dx,
-    firstEndPoint.dy,
-  );
-
-  var secondControlPoint = Offset(
-    size.width - (size.width / 3.25),
-    size.height - 80,
-  );
-  var secondEndPoint = Offset(size.width, size.height - 40);
-  path.quadraticBezierTo(
-    secondControlPoint.dx,
-    secondControlPoint.dy,
-    secondEndPoint.dx,
-    secondEndPoint.dy,
-  );
-
-  path.lineTo(size.width, size.height - 40);
-  path.lineTo(size.width, 0);
-  path.close();
-  return path;
 }
